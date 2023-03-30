@@ -1,0 +1,10 @@
+Instrucciones para ejecutar la app:
+
+1) Desde el consumidor configurar el path al fifo y a los archivos de texto (signals y logs).
+2) Desde el productor configurar el path al fifo.
+3) Lanzar consumidor y productor
+4) Comenzar a ingresar comandos:
+   a) con el comando quit se finalizan ambos procesos
+   b) introduciendo SIGUSR1 o SIGUSR2 se envian los mensajes SIGN:1 o SIGN:2 respectivamente.
+   c) introduciendo cualquier otro texto se envia DATA:<texto>
+
