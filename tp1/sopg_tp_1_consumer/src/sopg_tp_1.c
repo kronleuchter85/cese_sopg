@@ -11,9 +11,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-int main(void) {
-	puts("Launching Consumer"); /* prints !!!Hello World!!! */
+#define FIFO_NAME "/home/gonzalo/temp/myfifo"
+#define SIGN_FILE "/home/gonzalo/temp/signals.txt"
+#define DATA_FILE "/home/gonzalo/temp/log.txt"
 
-	example_named_fifo_reader_launch();
+int main(void) {
+	puts("Consumer"); /* prints !!!Hello World!!! */
+
+	named_fifo_consumer_launch(FIFO_NAME, SIGN_FILE, DATA_FILE);
+
 	return EXIT_SUCCESS;
 }

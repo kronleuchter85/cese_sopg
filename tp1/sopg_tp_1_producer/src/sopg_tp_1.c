@@ -11,8 +11,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#define FIFO_NAME "/home/gonzalo/temp/myfifo"
+
 int main(void) {
 	puts("Producer");
-	example_named_fifo_writer_launch();
+	named_fifo_producer_launch(FIFO_NAME);
 	return EXIT_SUCCESS;
 }
