@@ -5,50 +5,72 @@
  *      Author: gonzalo
  */
 
-#include <commons-threads.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <pthread.h>
 
-#include "SerialManager.h"
 #include "stdbool.h"
-
+#include <commons-threads.h>
+#include "SerialManager.h"
+#include "communication_channel.h"
+#include "interface_service_manager.h"
 //
 // buffer de comunicacion con el dispositivo serie (Emulador)
 //
-char serial_communication_buffer[12];
+char serial_communication_buffer[9];
+
+bool KEEP_RUNNING_SERIAL_CONNECTION_MANAGER_THREAD = true;
+
+void serial_connection_manager_thread_finish() {
+	KEEP_RUNNING_SERIAL_CONNECTION_MANAGER_THREAD = false;
+}
 
 //
 // thread de serial connection
 //
 void* serial_connection_manager_thread_start(void *args) {
 
-	if (!serial_open(1, 115200)) {
+	if (serial_open(1, 115200)) {
+		puts("Se produjo un error conectando al Emulador. Intentando nuevamente.");
+		return NULL;
+	}
 
-		while (true) {
+	while (KEEP_RUNNING_SERIAL_CONNECTION_MANAGER_THREAD) {
+
+		//
+		// recibimos el mensaje del emulador
+		//
+		int bytes = serial_receive(serial_communication_buffer, 9);
+
+		//
+		// tenemos updates desde el emulador
+		//
+		if (bytes > 0) {
 
 			//
-			// recibimos el mensaje del emulador
+			// bloqueamos el canal de actualizaciones hacia el interface service si
+			// tambien estamos enviando actualizaciones hacia el emulador
 			//
-			int bytes = serial_receive(serial_communication_buffer, 10);
+			communication_channel_lock();
 
-			if (bytes > 0) {
-				puts(serial_communication_buffer);
+			printf("Mensaje del Emulador - Bytes: %d, Mensaje: %s\n", bytes, serial_communication_buffer);
 
-				//
-				// enviamos al interface service
-				//
-				interface_service_connection_send(serial_communication_buffer);
+			//
+			// enviamos al interface service
+			//
+			interface_service_connection_send(serial_communication_buffer);
 
-			}
+			communication_channel_unlock();
 
-			sleep(5);
 		}
 
-	} else {
-		puts("Se produjo un error conectando al Emulador");
+		sleep(5);
 	}
+
+	puts("Finalizando Serial manager thread");
+
+	serial_close();
 
 	return NULL;
 }

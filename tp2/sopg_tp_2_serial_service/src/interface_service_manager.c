@@ -52,6 +52,12 @@ int interface_service_connection_manager_initialize() {
 		return 1;
 	}
 
+	return 0;
+
+}
+
+int interface_service_connection_manager_accept_new_client() {
+
 	addr_len = sizeof(struct sockaddr_in);
 	if ((socket_fd = accept(connection_socket, (struct sockaddr*) &clientaddr, &addr_len)) == -1) {
 		perror("error en accept");
@@ -62,30 +68,29 @@ int interface_service_connection_manager_initialize() {
 	printf("server:  conexion desde:  %connection_socket\n", ipClient);
 
 	return 0;
-
 }
 
 //
 // leer del interface service y guardar en el buffer la cantidad de bytes indicada
 //
-void interface_service_connection_manager_read(char *buffer, int size) {
+int interface_service_connection_manager_read(char *buffer, int size) {
 	int bytes_read;
 	if ((bytes_read = read(socket_fd, buffer, size)) == -1) {
 		perror("Error leyendo mensaje en socket");
-		exit(1);
 	}
 	buffer[bytes_read] = 0x00;
-	printf("Recibi %d bytes.:%s\n", bytes_read, buffer);
+	return bytes_read;
 }
 
 //
 // enviar al interface service el mensaje
 //
-void interface_service_connection_send(char *msg) {
-	if (write(socket_fd, msg, strlen(msg)) == -1) {
+int interface_service_connection_send(char *msg) {
+	int bytes_writen = 0;
+	if ((bytes_writen = write(socket_fd, msg, strlen(msg))) == -1) {
 		perror("Error escribiendo mensaje en socket");
-		exit(1);
 	}
+	return bytes_writen;
 }
 
 //
