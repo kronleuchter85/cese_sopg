@@ -8,19 +8,26 @@
 
 void signal_sigint_handler(int args) {
 	puts("Finalizando aplicacion");
+
+	puts("serial_connection_manager_thread_finish()");
 	serial_connection_manager_thread_finish();
+
+	puts("interface_service_connection_manager_thread_finish()");
 	interface_service_connection_manager_thread_finish();
+
+//	puts("exit(EXIT_SUCCESS)");
+//	exit(EXIT_SUCCESS);
 }
 
 int main(void) {
+
+	pthread_t serial_connection_thread;
+	pthread_t interface_service_connection_thread;
 
 	printf("Inicio Serial Service\r\n");
 
 	signal(SIGINT, signal_sigint_handler);
 	signal(SIGTERM, signal_sigint_handler);
-
-	pthread_t serial_connection_thread;
-	pthread_t interface_service_connection_thread;
 
 	//
 	// inicializacion de jobs

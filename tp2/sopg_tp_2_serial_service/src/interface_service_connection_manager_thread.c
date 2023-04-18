@@ -23,10 +23,17 @@
 #include "SerialManager.h"
 #include "communication_channel.h"
 
-bool KEEP_RUNNING_SERVICE_CONNECTION_MANAGER_THREAD = true;
+volatile bool KEEP_RUNNING_SERVICE_CONNECTION_MANAGER_THREAD = true;
 
 void interface_service_connection_manager_thread_finish() {
+
 	KEEP_RUNNING_SERVICE_CONNECTION_MANAGER_THREAD = false;
+
+	puts("interface_service_connection_manager_close_client()");
+	interface_service_connection_manager_close_client();
+	puts("interface_service_connection_manager_close_server()");
+	interface_service_connection_manager_close_server();
+
 }
 
 //
@@ -43,7 +50,7 @@ void* interface_service_connection_manager_thread_start(void *args) {
 	// seteamos el puerto de conexion, bindeamos y nos ponemos a escuchar
 	//
 	while (interface_service_connection_manager_initialize()) {
-		interface_service_connnection_manager_close();
+		interface_service_connection_manager_close_server();
 		sleep(4);
 	}
 
@@ -51,7 +58,7 @@ void* interface_service_connection_manager_thread_start(void *args) {
 	// aceptamos nuevas conexiones clientes
 	//
 	while (interface_service_connection_manager_accept_new_client()) {
-		interface_service_connnection_manager_close();
+		interface_service_connection_manager_close_client();
 		sleep(4);
 	}
 
@@ -62,46 +69,59 @@ void* interface_service_connection_manager_thread_start(void *args) {
 		//
 		int bytes_read = interface_service_connection_manager_read(interface_service_communication_buffer, 10);
 
-		if (bytes_read > 0) {
+		printf("Mensaje del Interface Service - Bytes: %d, Mensaje: %s\n", bytes_read, interface_service_communication_buffer);
 
-			//
-			// bloqueamos el canal de actualizaciones hacia hacia el emulador si
-			// tambien estamos enviando actualizaciones el interface service
-			//
-			communication_channel_lock();
+		if (KEEP_RUNNING_SERVICE_CONNECTION_MANAGER_THREAD) {
 
-			printf("Mensaje del Interface Service - Bytes: %d, Mensaje: %s\n", bytes_read, interface_service_communication_buffer);
+			if (bytes_read > 0) {
 
-			//
-			// enviamos al emulador
-			//
-			serial_send(interface_service_communication_buffer, strlen(interface_service_communication_buffer));
+				//
+				// bloqueamos el canal de actualizaciones hacia hacia el emulador si
+				// tambien estamos enviando actualizaciones el interface service
+				//
+				communication_channel_lock();
 
-			communication_channel_unlock();
-		}
-		else {
+				printf("Mensaje del Interface Service - Bytes: %d, Mensaje: %s\n", bytes_read, interface_service_communication_buffer);
 
-			//
-			// reiniciamos la conexion ya que el cliente se desconecto
-			//
+				//
+				// enviamos al emulador
+				//
+				serial_send(interface_service_communication_buffer, strlen(interface_service_communication_buffer));
 
-			interface_service_connnection_manager_close();
-
-			//
-			// aceptamos nuevas conexiones clientes
-			//
-			while (interface_service_connection_manager_accept_new_client()) {
-				interface_service_connnection_manager_close();
-				sleep(4);
+				communication_channel_unlock();
 			}
 
+			//
+			// validamos que el socket no se haya interrumpido porque estemos finalizando la aplicacion
+			//
+			else {
+
+				//
+				// reiniciamos la conexion ya que el cliente se desconecto
+				//
+				interface_service_connection_manager_close_client();
+
+				//
+				// aceptamos nuevas conexiones clientes
+				//
+				if (interface_service_connection_manager_accept_new_client()) {
+					puts("Recreando la conexion con Interface Service");
+					interface_service_connection_manager_close_client();
+					sleep(4);
+				}
+			}
+		}
+
+		//
+		// en caso de estar finalizando la aplicacion...
+		//
+		else {
+			break;
 		}
 
 	}
 
-	puts("Finalizando Service connection manager thread");
-
-	interface_service_connnection_manager_close();
+	puts("Interface Service connection thread finalizado");
 
 	return NULL;
 }

@@ -65,7 +65,7 @@ int interface_service_connection_manager_accept_new_client() {
 	}
 
 	inet_ntop(AF_INET, &(clientaddr.sin_addr), ipClient, sizeof(ipClient));
-	printf("server:  conexion desde:  %connection_socket\n", ipClient);
+	printf("server:  conexion desde:  %s connection_socket\n", ipClient);
 
 	return 0;
 }
@@ -96,6 +96,10 @@ int interface_service_connection_send(char *msg) {
 //
 // cerrar conexion con interface service
 //
-void interface_service_connnection_manager_close() {
+void interface_service_connection_manager_close_client() {
 	close(socket_fd);
+}
+
+void interface_service_connection_manager_close_server() {
+	close(connection_socket);
 }

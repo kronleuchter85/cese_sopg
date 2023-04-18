@@ -20,10 +20,14 @@
 //
 char serial_communication_buffer[9];
 
-bool KEEP_RUNNING_SERIAL_CONNECTION_MANAGER_THREAD = true;
+volatile bool KEEP_RUNNING_SERIAL_CONNECTION_MANAGER_THREAD = true;
 
 void serial_connection_manager_thread_finish() {
+
 	KEEP_RUNNING_SERIAL_CONNECTION_MANAGER_THREAD = false;
+
+	puts("Finalizando Serial manager thread");
+	serial_close();
 }
 
 //
@@ -68,9 +72,7 @@ void* serial_connection_manager_thread_start(void *args) {
 		sleep(5);
 	}
 
-	puts("Finalizando Serial manager thread");
-
-	serial_close();
+	puts("Serial manager thread finalizado");
 
 	return NULL;
 }

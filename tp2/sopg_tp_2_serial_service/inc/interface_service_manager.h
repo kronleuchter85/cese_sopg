@@ -11,9 +11,10 @@
 int interface_service_connection_manager_read(char *buffer, int size);
 int interface_service_connection_send(char *msg);
 
-void interface_service_connnection_manager_close();
-
 int interface_service_connection_manager_initialize();
 int interface_service_connection_manager_accept_new_client();
+
+void interface_service_connection_manager_close_server();
+void interface_service_connection_manager_close_client();
 
 #endif /* INTERFACE_SERVICE_MANAGER_H_ */
