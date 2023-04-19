@@ -29,11 +29,6 @@ void interface_service_connection_manager_thread_finish() {
 
 	KEEP_RUNNING_SERVICE_CONNECTION_MANAGER_THREAD = false;
 
-	puts("interface_service_connection_manager_close_client()");
-	interface_service_connection_manager_close_client();
-	puts("interface_service_connection_manager_close_server()");
-	interface_service_connection_manager_close_server();
-
 }
 
 //
@@ -49,7 +44,7 @@ void* interface_service_connection_manager_thread_start(void *args) {
 	//
 	// seteamos el puerto de conexion, bindeamos y nos ponemos a escuchar
 	//
-	while (interface_service_connection_manager_initialize()) {
+	while (KEEP_RUNNING_SERVICE_CONNECTION_MANAGER_THREAD && interface_service_connection_manager_initialize()) {
 		interface_service_connection_manager_close_server();
 		sleep(4);
 	}
@@ -57,7 +52,7 @@ void* interface_service_connection_manager_thread_start(void *args) {
 	//
 	// aceptamos nuevas conexiones clientes
 	//
-	while (interface_service_connection_manager_accept_new_client()) {
+	while (KEEP_RUNNING_SERVICE_CONNECTION_MANAGER_THREAD && interface_service_connection_manager_accept_new_client()) {
 		interface_service_connection_manager_close_client();
 		sleep(4);
 	}
@@ -68,8 +63,6 @@ void* interface_service_connection_manager_thread_start(void *args) {
 		// Leemos mensajes desde Interface Service
 		//
 		int bytes_read = interface_service_connection_manager_read(interface_service_communication_buffer, 10);
-
-		printf("Mensaje del Interface Service - Bytes: %d, Mensaje: %s\n", bytes_read, interface_service_communication_buffer);
 
 		if (KEEP_RUNNING_SERVICE_CONNECTION_MANAGER_THREAD) {
 

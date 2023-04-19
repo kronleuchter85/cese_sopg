@@ -78,7 +78,8 @@ int interface_service_connection_manager_read(char *buffer, int size) {
 	if ((bytes_read = read(socket_fd, buffer, size)) == -1) {
 		perror("Error leyendo mensaje en socket");
 	}
-	buffer[bytes_read] = 0x00;
+	if (bytes_read >= 0)
+		buffer[bytes_read] = 0x00;
 	return bytes_read;
 }
 

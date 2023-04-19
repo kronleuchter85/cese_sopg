@@ -15,6 +15,9 @@
 #include "SerialManager.h"
 #include "communication_channel.h"
 #include "interface_service_manager.h"
+
+#include <signal.h>
+
 //
 // buffer de comunicacion con el dispositivo serie (Emulador)
 //
@@ -26,14 +29,21 @@ void serial_connection_manager_thread_finish() {
 
 	KEEP_RUNNING_SERIAL_CONNECTION_MANAGER_THREAD = false;
 
-	puts("Finalizando Serial manager thread");
-	serial_close();
 }
 
 //
 // thread de serial connection
 //
 void* serial_connection_manager_thread_start(void *args) {
+
+	//
+	// enmascarando el SIGNINT para que la atienda el hilo principal
+	//
+	sigset_t signals_set;
+	sigemptyset(&signals_set);
+	sigaddset(&signals_set, SIGINT);
+	sigaddset(&signals_set, SIGTERM);
+	pthread_sigmask(SIG_BLOCK, &signals_set, NULL);
 
 	if (serial_open(1, 115200)) {
 		puts("Se produjo un error conectando al Emulador. Intentando nuevamente.");
